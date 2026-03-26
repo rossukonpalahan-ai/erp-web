@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบออกเอกสาร — BizDocs</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE8;
+    --border: #D8D5CC;
+    --border-light: #E8E6E0;
+    --text: #1A1814;
+    --text2: #6B6860;
+    --text3: #9B9890;
+    --accent: #1D4ED8;
+    --accent-bg: #EFF6FF;
+    --accent-border: #BFDBFE;
+    --green: #0F6E56;
+    --green-bg: #E1F5EE;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --purple: #534AB7;
+    --purple-bg: #EEEDFE;
+    --font: 'Sarabun', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* ========== LAYOUT ========== */
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .brand-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 0;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px 20px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .content { padding: 28px; flex: 1; }
+
+  /* ========== BUTTONS ========== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #1a44c4; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { background: var(--surface2); color: var(--text); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: none;
+    padding: 8px 10px;
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger {
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1px solid #F7C1C1;
+  }
+  .btn-danger:hover { background: #F7C1C1; }
+  .btn-sm { padding: 5px 12px; font-size: 13px; }
+  .btn-icon { padding: 6px; }
+
+  /* ========== CARDS ========== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .stat-label { font-size: 13px; color: var(--text3); margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: var(--text); }
+  .stat-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .stat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  /* ========== TABLE ========== */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg); cursor: pointer; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--accent-bg); color: var(--accent); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); }
+  .badge-gray { background: var(--surface2); color: var(--text2); }
+
+  /* ========== FORM ========== */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 13px; font-weight: 500; color: var(--text2); }
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.08);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B6860' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 30px; }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  /* ========== ITEMS TABLE ========== */
+  .items-table { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .items-table table { width: 100%; }
+  .items-table thead th {
+    background: var(--surface2);
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .items-table tbody td { padding: 8px 12px; }
+  .items-table input {
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  .items-table input:focus {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    box-shadow: none;
+  }
+  .items-table .num-input { text-align: right; }
+  .items-table .total-cell {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text2);
+    text-align: right;
+  }
+
+  .totals-box {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-top: 16px;
+  }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .total-row.grand {
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .total-val { font-family: var(--mono); }
+
+  /* ========== DOCUMENT VIEW (Print-style) ========== */
+  .doc-view {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+  .doc-company { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .doc-company-sub { font-size: 13px; color: var(--text3); margin-top: 4px; line-height: 1.6; }
+  .doc-type-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  .doc-number { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--text); }
+  .doc-date { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+  .doc-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
+  .doc-party-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 8px; }
+  .doc-party-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .doc-party-detail { font-size: 13px; color: var(--text2); line-height: 1.6; margin-top: 4px; }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
+  .doc-table thead th {
+    background: var(--bg);
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-table tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); }
+  .doc-table tfoot td { padding: 8px 12px; font-size: 14px; }
+  .doc-table tfoot tr.grand-total td { border-top: 2px solid var(--border); font-weight: 600; font-size: 15px; padding-top: 12px; }
+  .doc-table .right { text-align: right; font-family: var(--mono); }
+
+  .doc-note { background: var(--surface2); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--text2); line-height: 1.7; margin-top: 24px; }
+  .doc-sign { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 48px; }
+  .sign-box { text-align: center; }
+  .sign-line { border-top: 1px solid var(--border); margin-bottom: 8px; }
+  .sign-label { font-size: 12px; color: var(--text3); }
+
+  /* ========== MODAL ========== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+  .modal-title { font-size: 17px; font-weight: 600; }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+  }
+
+  /* ========== TABS ========== */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab {
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ========== PAGES ========== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ========== UTILITY ========== */
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .mt-4 { margin-top: 4px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .text-sm { font-size: 13px; }
+  .text-muted { color: var(--text2); }
+  .text-right { text-align: right; }
+  .mono { font-family: var(--mono); }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-header-title { font-size: 15px; font-weight: 600; }
+  .card-body { padding: 20px; }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-state svg { margin: 0 auto 12px; display: block; opacity: 0.4; }
+  .empty-state p { font-size: 14px; }
+
+  @media print {
+    .sidebar, .topbar, .topbar-actions, .no-print { display: none !important; }
+    .main { margin-left: 0; }
+    .content { padding: 0; }
+    .doc-view { border: none; box-shadow: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">BizDocs</div>
+      <div class="brand-sub">ระบบออกเอกสาร</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">หน้าหลัก</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>
+        ภาพรวม
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">เอกสาร</div>
+      <div class="nav-item" onclick="showPage('quotation')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="1.5"/></svg>
+        ใบเสนอราคา (QT)
+        <span class="nav-badge" id="badge-qt">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('pr')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="1.5"/></svg>
+        ใบขอซื้อ (PR)
+        <span class="nav-badge" id="badge-pr">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('po')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="1.5"/></svg>
+        ใบสั่งซื้อ (PO)
+        <span class="nav-badge" id="badge-po">0</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">ตั้งค่า</div>
+      <div class="nav-item" onclick="showPage('settings')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke-width="1.5"/></svg>
+        ตั้งค่าบริษัท
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Dashboard Page -->
+    <div id="page-dashboard" class="page active">
+      <div class="topbar">
+        <div class="topbar-title">ภาพรวม</div>
+        <div class="topbar-actions no-print">
+          <span class="text-sm text-muted" id="today-date"></span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">ใบเสนอราคาทั้งหมด</div>
+            <div class="stat-value" id="stat-qt">0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--accent)"></span>เดือนนี้</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ใบขอซื้อทั้งหมด</div>
+            <div class="stat-value" id="stat-pr">0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--amber)"></span>รออนุมัติ</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ใบสั่งซื้อทั้งหมด</div>
+            <div class="stat-value" id="stat-po">0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--green)"></span>อนุมัติแล้ว</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">มูลค่ารวม (PO)</div>
+            <div class="stat-value mono" id="stat-total">฿0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--purple)"></span>ทั้งหมด</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title">เอกสารล่าสุด</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่</th>
+                  <th>ประเภท</th>
+                  <th>ชื่อ / ผู้จำหน่าย</th>
+                  <th>วันที่</th>
+                  <th>มูลค่า</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="recent-docs">
+                <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text3)">ยังไม่มีเอกสาร</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quotation Page -->
+    <div id="page-quotation" class="page">
+      <div class="topbar">
+        <div class="topbar-title">ใบเสนอราคา (Quotation)</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('qt')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2"/></svg>
+            สร้างใหม่
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่ QT</th>
+                  <th>ลูกค้า</th>
+                  <th>วันที่</th>
+                  <th>วันหมดอายุ</th>
+                  <th>มูลค่า</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="qt-list">
+                <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="1.2"/></svg><p>ยังไม่มีใบเสนอราคา</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PR Page -->
+    <div id="page-pr" class="page">
+      <div class="topbar">
+        <div class="topbar-title">ใบขอซื้อ (Purchase Request)</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('pr')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2"/></svg>
+            สร้างใหม่
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่ PR</th>
+                  <th>ผู้ขอซื้อ</th>
+                  <th>แผนก</th>
+                  <th>วันที่</th>
+                  <th>มูลค่า</th>
+                  <th>สถานะ</th>
+                  <th>PO</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="pr-list">
+                <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="1.2"/></svg><p>ยังไม่มีใบขอซื้อ</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PO Page -->
+    <div id="page-po" class="page">
+      <div class="topbar">
+        <div class="topbar-title">ใบสั่งซื้อ (Purchase Order)</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('po')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2"/></svg>
+            สร้างใหม่
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่ PO</th>
+                  <th>ผู้จำหน่าย</th>
+                  <th>วันที่</th>
+                  <th>กำหนดส่ง</th>
+                  <th>มูลค่า</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="po-list">
+                <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="1.2"/></svg><p>ยังไม่มีใบสั่งซื้อ</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="page-settings" class="page">
+      <div class="topbar">
+        <div class="topbar-title">ตั้งค่าบริษัท</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="saveSettings()">บันทึก</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card" style="max-width:600px">
+          <div class="card-header"><div class="card-header-title">ข้อมูลบริษัท</div></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group full"><label>ชื่อบริษัท</label><input id="s-company" type="text" value="บริษัท ตัวอย่าง จำกัด"></div>
+              <div class="form-group full"><label>ที่อยู่</label><textarea id="s-address">123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110</textarea></div>
+              <div class="form-group"><label>เบอร์โทรศัพท์</label><input id="s-phone" type="text" value="02-000-0000"></div>
+              <div class="form-group"><label>อีเมล</label><input id="s-email" type="email" value="info@company.co.th"></div>
+              <div class="form-group"><label>เลขประจำตัวผู้เสียภาษี</label><input id="s-tax" type="text" value="0105565000000"></div>
+              <div class="form-group"><label>อัตราภาษี VAT (%)</label><input id="s-vat" type="number" value="7"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document View Page -->
+    <div id="page-docview" class="page">
+      <div class="topbar no-print">
+        <div class="topbar-title" id="docview-title">เอกสาร</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="goBack()">← กลับ</button>
+          <button class="btn btn-primary" onclick="window.print()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z" stroke-width="1.5"/></svg>
+            พิมพ์ / PDF
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="docview-content"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">สร้างเอกสาร</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="modal-save" onclick="saveDocument()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let settings = {
+  company: 'บริษัท ตัวอย่าง จำกัด',
+  address: '123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
+  phone: '02-000-0000',
+  email: 'info@company.co.th',
+  tax: '0105565000000',
+  vat: 7
+};
+
+let docs = { qt: [], pr: [], po: [] };
+let currentType = '';
+let currentPage = 'dashboard';
+let prevPage = '';
+let itemCounter = 1;
+
+// ========== NAVIGATION ==========
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + page + "'")) {
+      n.classList.add('active');
+    }
+  });
+  currentPage = page;
+}
+
+function goBack() {
+  showPage(prevPage || 'dashboard');
+}
+
+// ========== DATE ==========
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function todayValue() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function addDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+// ========== NUMBER ==========
+function genNo(prefix) {
+  const y = new Date().getFullYear() + 543;
+  const m = String(new Date().getMonth()+1).padStart(2,'0');
+  const n = String(docs[prefix.toLowerCase()].length + 1).padStart(4,'0');
+  return prefix.toUpperCase() + '-' + y + m + '-' + n;
+}
+
+function fmt(n) {
+  return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+}
+
+// ========== MODAL ==========
+let currentDocNo = '';
+
+function openModal(type) {
+  currentType = type;
+  currentDocNo = genNo(type);
+  const titles = { qt: 'สร้างใบเสนอราคา', pr: 'สร้างใบขอซื้อ', po: 'สร้างใบสั่งซื้อ' };
+  document.getElementById('modal-title').textContent = titles[type];
+  document.getElementById('modal-body').innerHTML = buildForm(type);
+  document.getElementById('modal-overlay').classList.add('open');
+  itemCounter = 1;
+  addItemRow(type);
+  updateTotals(type);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ========== FORMS ==========
+function buildForm(type) {
+  if (type === 'qt') return buildQTForm();
+  if (type === 'pr') return buildPRForm();
+  if (type === 'po') return buildPOForm();
+}
+
+function buildQTForm() {
+  return `
+    <div class="form-grid mb-24">
+      <div class="form-group">
+        <label>เลขที่ใบเสนอราคา</label>
+        <input type="text" id="f-no" value="${currentDocNo}" readonly style="background:var(--surface2); color:var(--text2)">
+      </div>
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="f-date" value="${todayValue()}">
+      </div>
+      <div class="form-group full">
+        <label>ชื่อลูกค้า / บริษัท</label>
+        <input type="text" id="f-customer" placeholder="เช่น บริษัท ABC จำกัด">
+      </div>
+      <div class="form-group full">
+        <label>ที่อยู่ลูกค้า</label>
+        <textarea id="f-customer-addr" placeholder="ที่อยู่สำหรับส่งใบเสนอราคา"></textarea>
+      </div>
+      <div class="form-group">
+        <label>วันหมดอายุใบเสนอ</label>
+        <input type="date" id="f-expiry" value="${addDays(30)}">
+      </div>
+      <div class="form-group">
+        <label>เงื่อนไขการชำระเงิน</label>
+        <select id="f-payment">
+          <option>ชำระเงินสด</option>
+          <option>30 วัน</option>
+          <option>60 วัน</option>
+          <option>เครดิต 90 วัน</option>
+        </select>
+      </div>
+    </div>
+    ${buildItemsSection('qt')}
+    <div class="form-group mt-16">
+      <label>หมายเหตุ</label>
+      <textarea id="f-note" placeholder="หมายเหตุ / เงื่อนไขเพิ่มเติม"></textarea>
+    </div>
+  `;
+}
+
+function buildPRForm() {
+  return `
+    <div class="form-grid mb-24">
+      <div class="form-group">
+        <label>เลขที่ PR</label>
+        <input type="text" id="f-no" value="${currentDocNo}" readonly style="background:var(--surface2); color:var(--text2)">
+      </div>
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="f-date" value="${todayValue()}">
+      </div>
+      <div class="form-group">
+        <label>ผู้ขอซื้อ</label>
+        <input type="text" id="f-requester" placeholder="ชื่อผู้ขอซื้อ">
+      </div>
+      <div class="form-group">
+        <label>แผนก</label>
+        <input type="text" id="f-dept" placeholder="เช่น ฝ่ายไอที">
+      </div>
+      <div class="form-group">
+        <label>วันที่ต้องการ</label>
+        <input type="date" id="f-need-date" value="${addDays(14)}">
+      </div>
+      <div class="form-group">
+        <label>ผู้จำหน่ายที่แนะนำ</label>
+        <input type="text" id="f-suggest-vendor" placeholder="(ถ้ามี)">
+      </div>
+    </div>
+    ${buildItemsSection('pr')}
+    <div class="form-group mt-16">
+      <label>เหตุผลในการขอซื้อ</label>
+      <textarea id="f-note" placeholder="ระบุเหตุผลความจำเป็น"></textarea>
+    </div>
+  `;
+}
+
+function buildPOForm() {
+  return `
+    <div class="form-grid mb-24">
+      <div class="form-group">
+        <label>เลขที่ PO</label>
+        <input type="text" id="f-no" value="${currentDocNo}" readonly style="background:var(--surface2); color:var(--text2)">
+      </div>
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="f-date" value="${todayValue()}">
+      </div>
+      <div class="form-group full">
+        <label>ชื่อผู้จำหน่าย / Vendor</label>
+        <input type="text" id="f-vendor" placeholder="เช่น บริษัท ซัพพลาย จำกัด">
+      </div>
+      <div class="form-group full">
+        <label>ที่อยู่ผู้จำหน่าย</label>
+        <textarea id="f-vendor-addr" placeholder="ที่อยู่ผู้จำหน่าย"></textarea>
+      </div>
+      <div class="form-group">
+        <label>กำหนดส่งสินค้า</label>
+        <input type="date" id="f-delivery" value="${addDays(7)}">
+      </div>
+      <div class="form-group">
+        <label>เงื่อนไขการชำระเงิน</label>
+        <select id="f-payment">
+          <option>ชำระเงินสด</option>
+          <option>30 วัน</option>
+          <option>60 วัน</option>
+          <option>เครดิต 90 วัน</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>สถานที่ส่งสินค้า</label>
+        <input type="text" id="f-ship-to" placeholder="ที่อยู่จัดส่ง">
+      </div>
+    </div>
+    ${buildItemsSection('po')}
+    <div class="form-group mt-16">
+      <label>หมายเหตุ</label>
+      <textarea id="f-note" placeholder="หมายเหตุ / เงื่อนไขพิเศษ"></textarea>
+    </div>
+  `;
+}
+
+function buildItemsSection(type) {
+  return `
+    <div class="section-title">รายการสินค้า / บริการ</div>
+    <div class="items-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>รายละเอียด</th>
+            <th style="width:90px; text-align:right">จำนวน</th>
+            <th style="width:90px; text-align:right">หน่วย</th>
+            <th style="width:110px; text-align:right">ราคา/หน่วย</th>
+            <th style="width:120px; text-align:right">รวม</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-outline btn-sm mt-8" onclick="addItemRow('${type}')">+ เพิ่มรายการ</button>
+    <div class="totals-box mt-16">
+      <div class="total-row"><span>ยอดรวมก่อน VAT</span><span class="total-val" id="tot-sub">0.00</span></div>
+      <div class="total-row"><span>VAT ${settings.vat}%</span><span class="total-val" id="tot-vat">0.00</span></div>
+      <div class="total-row grand"><span>ยอดรวมทั้งสิ้น</span><span class="total-val" id="tot-grand">฿ 0.00</span></div>
+    </div>
+  `;
+}
+
+function addItemRow(type) {
+  const n = itemCounter++;
+  const tr = document.createElement('tr');
+  tr.id = 'item-' + n;
+  tr.innerHTML = `
+    <td style="color:var(--text3); font-size:13px">${n}</td>
+    <td><input class="item-desc" type="text" placeholder="รายละเอียดสินค้า/บริการ" oninput="updateTotals('${type}')"></td>
+    <td><input class="item-qty num-input" type="number" value="1" min="0" oninput="updateTotals('${type}')" style="width:100%; text-align:right"></td>
+    <td><input class="item-unit" type="text" placeholder="ชิ้น" style="width:100%; text-align:right"></td>
+    <td><input class="item-price num-input" type="number" value="0" min="0" oninput="updateTotals('${type}')" style="width:100%; text-align:right"></td>
+    <td class="total-cell" id="row-total-${n}">0.00</td>
+    <td><button class="btn btn-ghost btn-icon" onclick="removeRow(${n}, '${type}')"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg></button></td>
+  `;
+  document.getElementById('items-body').appendChild(tr);
+}
+
+function removeRow(n, type) {
+  const row = document.getElementById('item-' + n);
+  if (row) row.remove();
+  updateTotals(type);
+}
+
+function updateTotals(type) {
+  let sub = 0;
+  document.querySelectorAll('#items-body tr').forEach((tr, i) => {
+    const qty = parseFloat(tr.querySelector('.item-qty')?.value || 0);
+    const price = parseFloat(tr.querySelector('.item-price')?.value || 0);
+    const rowTotal = qty * price;
+    sub += rowTotal;
+    const cell = tr.querySelector('.total-cell');
+    if (cell) cell.textContent = fmt(rowTotal);
+  });
+  const vat = sub * (settings.vat / 100);
+  const grand = sub + vat;
+  document.getElementById('tot-sub').textContent = fmt(sub);
+  document.getElementById('tot-vat').textContent = fmt(vat);
+  document.getElementById('tot-grand').textContent = '฿ ' + fmt(grand);
+}
+
+function collectItems() {
+  const items = [];
+  document.querySelectorAll('#items-body tr').forEach(tr => {
+    const desc = tr.querySelector('.item-desc')?.value || '';
+    const qty = parseFloat(tr.querySelector('.item-qty')?.value || 0);
+    const unit = tr.querySelector('.item-unit')?.value || '';
+    const price = parseFloat(tr.querySelector('.item-price')?.value || 0);
+    if (desc) items.push({ desc, qty, unit, price, total: qty * price });
+  });
+  return items;
+}
+
+// ========== SAVE ==========
+function saveDocument() {
+  const type = currentType;
+  const items = collectItems();
+  const sub = items.reduce((s, i) => s + i.total, 0);
+  const vat = sub * (settings.vat / 100);
+  const grand = sub + vat;
+
+  const base = {
+    no: document.getElementById('f-no').value,
+    date: document.getElementById('f-date').value,
+    note: document.getElementById('f-note')?.value || '',
+    items, sub, vat, grand,
+    status: type === 'pr' ? 'รออนุมัติ' : type === 'po' ? 'อนุมัติแล้ว' : 'ส่งแล้ว'
+  };
+
+  let doc;
+  if (type === 'qt') {
+    doc = { ...base,
+      customer: document.getElementById('f-customer').value,
+      customerAddr: document.getElementById('f-customer-addr').value,
+      expiry: document.getElementById('f-expiry').value,
+      payment: document.getElementById('f-payment').value
+    };
+  } else if (type === 'pr') {
+    doc = { ...base,
+      requester: document.getElementById('f-requester').value,
+      dept: document.getElementById('f-dept').value,
+      needDate: document.getElementById('f-need-date').value,
+      suggestVendor: document.getElementById('f-suggest-vendor')?.value || ''
+    };
+  } else if (type === 'po') {
+    doc = { ...base,
+      vendor: document.getElementById('f-vendor').value,
+      vendorAddr: document.getElementById('f-vendor-addr').value,
+      delivery: document.getElementById('f-delivery').value,
+      payment: document.getElementById('f-payment').value,
+      shipTo: document.getElementById('f-ship-to').value
+    };
+  }
+
+  docs[type].push(doc);
+  closeModal();
+  renderLists();
+  updateStats();
+  renderRecentDocs();
+}
+
+// ========== RENDER LISTS ==========
+const statusBadge = {
+  'ส่งแล้ว': 'badge-blue',
+  'รออนุมัติ': 'badge-amber',
+  'อนุมัติแล้ว': 'badge-green',
+  'สร้าง PO แล้ว': 'badge-purple',
+  'จัดส่งแล้ว': 'badge-purple',
+  'ยกเลิก': 'badge-red',
+  'ร่าง': 'badge-gray'
+};
+
+function renderLists() {
+  // QT
+  const qtBody = document.getElementById('qt-list');
+  if (docs.qt.length === 0) {
+    qtBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="1.2"/></svg><p>ยังไม่มีใบเสนอราคา</p></div></td></tr>';
+  } else {
+    qtBody.innerHTML = docs.qt.map((d, i) => `
+      <tr onclick="viewDoc('qt', ${i})">
+        <td class="mono" style="font-size:13px">${d.no}</td>
+        <td>${d.customer || '-'}</td>
+        <td>${formatDate(d.date)}</td>
+        <td>${formatDate(d.expiry)}</td>
+        <td class="mono">${fmt(d.grand)}</td>
+        <td><span class="badge ${statusBadge[d.status]}">${d.status}</span></td>
+        <td>
+          <button class="btn btn-ghost btn-icon" onclick="event.stopPropagation(); changeStatus('qt', ${i})">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // PR
+  const prBody = document.getElementById('pr-list');
+  if (docs.pr.length === 0) {
+    prBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="1.2"/></svg><p>ยังไม่มีใบขอซื้อ</p></div></td></tr>';
+  } else {
+    prBody.innerHTML = docs.pr.map((d, i) => `
+      <tr onclick="viewDoc('pr', ${i})">
+        <td class="mono" style="font-size:13px">${d.no}</td>
+        <td>${d.requester || '-'}</td>
+        <td>${d.dept || '-'}</td>
+        <td>${formatDate(d.date)}</td>
+        <td class="mono">${fmt(d.grand)}</td>
+        <td><span class="badge ${statusBadge[d.status]}">${d.status}</span></td>
+        <td>
+          ${d.status === 'อนุมัติแล้ว' ? `
+            <button class="btn btn-outline btn-sm" style="color:var(--green); border-color:var(--green); white-space:nowrap" onclick="event.stopPropagation(); openConvertPOModal(${i})">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
+              สร้าง PO
+            </button>` : d.status === 'สร้าง PO แล้ว' && d.linkedPoNo ? `
+            <span class="mono" style="font-size:12px; color:var(--purple)">${d.linkedPoNo}</span>` : ''}
+        </td>
+        <td>
+          <button class="btn btn-ghost btn-icon" onclick="event.stopPropagation(); changeStatus('pr', ${i})">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // PO
+  const poBody = document.getElementById('po-list');
+  if (docs.po.length === 0) {
+    poBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="1.2"/></svg><p>ยังไม่มีใบสั่งซื้อ</p></div></td></tr>';
+  } else {
+    poBody.innerHTML = docs.po.map((d, i) => `
+      <tr onclick="viewDoc('po', ${i})">
+        <td class="mono" style="font-size:13px">${d.no}</td>
+        <td>${d.vendor || '-'}</td>
+        <td>${formatDate(d.date)}</td>
+        <td>${formatDate(d.delivery)}</td>
+        <td class="mono">${fmt(d.grand)}</td>
+        <td><span class="badge ${statusBadge[d.status]}">${d.status}</span></td>
+        <td>
+          <button class="btn btn-ghost btn-icon" onclick="event.stopPropagation(); changeStatus('po', ${i})">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Badges
+  document.getElementById('badge-qt').textContent = docs.qt.length;
+  document.getElementById('badge-pr').textContent = docs.pr.length;
+  document.getElementById('badge-po').textContent = docs.po.length;
+}
+
+function updateStats() {
+  document.getElementById('stat-qt').textContent = docs.qt.length;
+  document.getElementById('stat-pr').textContent = docs.pr.length;
+  document.getElementById('stat-po').textContent = docs.po.length;
+  const total = docs.po.reduce((s, d) => s + d.grand, 0);
+  document.getElementById('stat-total').textContent = '฿' + fmt(total);
+}
+
+function renderRecentDocs() {
+  const all = [
+    ...docs.qt.map(d => ({ ...d, type: 'QT', name: d.customer })),
+    ...docs.pr.map(d => ({ ...d, type: 'PR', name: d.requester + ' / ' + d.dept })),
+    ...docs.po.map(d => ({ ...d, type: 'PO', name: d.vendor }))
+  ].sort((a, b) => b.no.localeCompare(a.no)).slice(0, 10);
+
+  const typeBadge = { QT: 'badge-blue', PR: 'badge-amber', PO: 'badge-green' };
+  const body = document.getElementById('recent-docs');
+  if (all.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text3)">ยังไม่มีเอกสาร</td></tr>';
+  } else {
+    body.innerHTML = all.map(d => `
+      <tr>
+        <td class="mono" style="font-size:13px">${d.no}</td>
+        <td><span class="badge ${typeBadge[d.type]}">${d.type}</span></td>
+        <td>${d.name || '-'}</td>
+        <td>${formatDate(d.date)}</td>
+        <td class="mono">${fmt(d.grand)}</td>
+        <td><span class="badge ${statusBadge[d.status]}">${d.status}</span></td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ========== CHANGE STATUS ==========
+function changeStatus(type, idx) {
+  const statuses = {
+    qt: ['ร่าง', 'ส่งแล้ว', 'ยกเลิก'],
+    pr: ['รออนุมัติ', 'อนุมัติแล้ว', 'ยกเลิก'],
+    po: ['อนุมัติแล้ว', 'จัดส่งแล้ว', 'ยกเลิก']
+  };
+  const current = docs[type][idx].status;
+  const list = statuses[type];
+  const menu = document.createElement('div');
+  menu.style.cssText = 'position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-md); z-index:999; padding:4px 0; min-width:140px';
+  menu.innerHTML = list.map(s => `<div onclick="setStatus('${type}', ${idx}, '${s}', this)" style="padding:9px 16px; font-size:14px; cursor:pointer; color:${s === current ? 'var(--accent)' : 'var(--text)'}; font-weight:${s === current ? '600' : '400'}">${s}</div>`).join('');
+  menu.querySelectorAll('div').forEach(d => d.onmouseenter = () => d.style.background = 'var(--surface2)');
+  menu.querySelectorAll('div').forEach(d => d.onmouseleave = () => d.style.background = '');
+  document.body.appendChild(menu);
+  const closeMenu = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', closeMenu); }};
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  const e = event;
+  menu.style.left = (e.clientX - 120) + 'px';
+  menu.style.top = (e.clientY + 8) + 'px';
+}
+
+function setStatus(type, idx, status) {
+  docs[type][idx].status = status;
+  renderLists();
+  updateStats();
+  renderRecentDocs();
+}
+
+// ========== VIEW DOCUMENT ==========
+function viewDoc(type, idx) {
+  prevPage = type === 'qt' ? 'quotation' : type;
+  const d = docs[type][idx];
+  const typeNames = { qt: 'ใบเสนอราคา', pr: 'ใบขอซื้อ', po: 'ใบสั่งซื้อ' };
+  const typeColors = { qt: 'var(--accent)', pr: 'var(--amber)', po: 'var(--green)' };
+  const typeBgColors = { qt: 'var(--accent-bg)', pr: 'var(--amber-bg)', po: 'var(--green-bg)' };
+  const typeCodes = { qt: 'QUOTATION', pr: 'PURCHASE REQUEST', po: 'PURCHASE ORDER' };
+
+  let partySection = '';
+  if (type === 'qt') {
+    partySection = `
+      <div class="doc-parties">
+        <div>
+          <div class="doc-party-label">จาก</div>
+          <div class="doc-party-name">${settings.company}</div>
+          <div class="doc-party-detail">${settings.address}<br>${settings.phone} | ${settings.email}<br>เลขภาษี: ${settings.tax}</div>
+        </div>
+        <div>
+          <div class="doc-party-label">เสนอถึง</div>
+          <div class="doc-party-name">${d.customer}</div>
+          <div class="doc-party-detail">${(d.customerAddr || '').replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  } else if (type === 'pr') {
+    partySection = `
+      <div class="doc-parties">
+        <div>
+          <div class="doc-party-label">บริษัท</div>
+          <div class="doc-party-name">${settings.company}</div>
+          <div class="doc-party-detail">${settings.address}</div>
+        </div>
+        <div>
+          <div class="doc-party-label">ผู้ขอซื้อ</div>
+          <div class="doc-party-name">${d.requester}</div>
+          <div class="doc-party-detail">แผนก: ${d.dept}<br>วันที่ต้องการ: ${formatDate(d.needDate)}</div>
+        </div>
+      </div>`;
+  } else if (type === 'po') {
+    partySection = `
+      <div class="doc-parties">
+        <div>
+          <div class="doc-party-label">ผู้ซื้อ</div>
+          <div class="doc-party-name">${settings.company}</div>
+          <div class="doc-party-detail">${settings.address}<br>${settings.phone}<br>เลขภาษี: ${settings.tax}</div>
+        </div>
+        <div>
+          <div class="doc-party-label">ผู้จำหน่าย</div>
+          <div class="doc-party-name">${d.vendor}</div>
+          <div class="doc-party-detail">${(d.vendorAddr || '').replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  }
+
+  let extraInfo = '';
+  if (type === 'qt') extraInfo = `<td style="font-size:13px; color:var(--text2)">วันหมดอายุ: ${formatDate(d.expiry)} &nbsp;|&nbsp; เงื่อนไข: ${d.payment}</td>`;
+  if (type === 'po') extraInfo = `<td style="font-size:13px; color:var(--text2)">กำหนดส่ง: ${formatDate(d.delivery)} &nbsp;|&nbsp; เงื่อนไข: ${d.payment}</td>`;
+
+  const signs = type === 'qt'
+    ? ['ผู้เสนอราคา', 'ผู้รับมอบอำนาจ', 'ลูกค้า']
+    : type === 'pr'
+    ? ['ผู้ขอซื้อ', 'หัวหน้าแผนก', 'ผู้อนุมัติ']
+    : ['ผู้จัดซื้อ', 'ผู้จัดการ', 'ผู้อนุมัติ'];
+
+  document.getElementById('docview-title').textContent = `${typeNames[type]} — ${d.no}`;
+  document.getElementById('docview-content').innerHTML = `
+    <div class="doc-view">
+      <div class="doc-header">
+        <div>
+          <div class="doc-company">${settings.company}</div>
+          <div class="doc-company-sub">${settings.address}<br>${settings.phone} | ${settings.email}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="doc-type-badge" style="background:${typeBgColors[type]}; color:${typeColors[type]}">${typeCodes[type]}</div>
+          <div class="doc-number">${d.no}</div>
+          <div class="doc-date">วันที่: ${formatDate(d.date)}</div>
+        </div>
+      </div>
+
+      ${partySection}
+
+      ${d.fromPrNo ? `<div style="background:var(--purple-bg); border:1px solid #AFA9EC; border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; font-size:13px; color:var(--purple); display:flex; align-items:center; gap:8px;"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="1.5"/></svg> อ้างอิงใบขอซื้อ: <strong>${d.fromPrNo}</strong></div>` : ''}
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>รายละเอียด</th>
+            <th style="width:80px; text-align:right">จำนวน</th>
+            <th style="width:70px; text-align:right">หน่วย</th>
+            <th style="width:110px; text-align:right">ราคา/หน่วย</th>
+            <th style="width:120px; text-align:right">รวม (บาท)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.items.map((item, i) => `
+            <tr>
+              <td style="color:var(--text3)">${i+1}</td>
+              <td>${item.desc}</td>
+              <td class="right">${item.qty.toLocaleString()}</td>
+              <td class="right" style="color:var(--text2)">${item.unit}</td>
+              <td class="right">${fmt(item.price)}</td>
+              <td class="right" style="font-weight:500">${fmt(item.total)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="5" style="text-align:right; color:var(--text2); font-size:13px">ยอดรวมก่อน VAT</td><td class="right">${fmt(d.sub)}</td></tr>
+          <tr><td colspan="5" style="text-align:right; color:var(--text2); font-size:13px">VAT ${settings.vat}%</td><td class="right">${fmt(d.vat)}</td></tr>
+          <tr class="grand-total"><td colspan="5" style="text-align:right">ยอดรวมทั้งสิ้น</td><td class="right">฿ ${fmt(d.grand)}</td></tr>
+        </tfoot>
+      </table>
+
+      ${d.note ? `<div class="doc-note"><strong style="font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text3)">หมายเหตุ</strong><br>${d.note}</div>` : ''}
+
+      <div class="doc-sign">
+        ${signs.map(s => `
+          <div class="sign-box">
+            <div style="height:60px"></div>
+            <div class="sign-line"></div>
+            <div class="sign-label">${s}</div>
+            <div style="height:8px"></div>
+            <div class="sign-label">วันที่ ……………………</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  showPage('docview');
+}
+
+// ========== CONVERT PR → PO ==========
+let convertPrIdx = -1;
+
+function openConvertPOModal(prIdx) {
+  convertPrIdx = prIdx;
+  const pr = docs.pr[prIdx];
+  const poNo = genNo('po');
+
+  document.getElementById('modal-title').textContent = `สร้าง PO จาก ${pr.no}`;
+  document.getElementById('modal-save').textContent = 'สร้าง PO';
+  document.getElementById('modal-save').onclick = saveConvertedPO;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div style="background:var(--green-bg); border:1px solid #9FE1CB; border-radius:var(--radius); padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <svg width="16" height="16" fill="none" stroke="var(--green)" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
+      <div style="font-size:13px; color:var(--green)">
+        <strong>PR ${pr.no}</strong> ได้รับการอนุมัติแล้ว — กรอกข้อมูลผู้จำหน่ายเพื่อสร้าง PO
+      </div>
+    </div>
+
+    <div style="background:var(--surface2); border-radius:var(--radius); padding:14px 16px; margin-bottom:20px; font-size:13px; color:var(--text2);">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div><span style="color:var(--text3)">ผู้ขอซื้อ:</span> ${pr.requester}</div>
+        <div><span style="color:var(--text3)">แผนก:</span> ${pr.dept}</div>
+        <div><span style="color:var(--text3)">วันที่ต้องการ:</span> ${formatDate(pr.needDate)}</div>
+        <div><span style="color:var(--text3)">รายการ:</span> ${pr.items.length} รายการ</div>
+      </div>
+    </div>
+
+    <div class="form-grid mb-24">
+      <div class="form-group">
+        <label>เลขที่ PO (ออกอัตโนมัติ)</label>
+        <input type="text" id="cv-no" value="${poNo}" readonly style="background:var(--surface2); color:var(--text2)">
+      </div>
+      <div class="form-group">
+        <label>วันที่ PO</label>
+        <input type="date" id="cv-date" value="${todayValue()}">
+      </div>
+      <div class="form-group full">
+        <label>ชื่อผู้จำหน่าย / Vendor <span style="color:var(--red)">*</span></label>
+        <input type="text" id="cv-vendor" placeholder="เช่น บริษัท ซัพพลาย จำกัด" value="${pr.suggestVendor || ''}">
+      </div>
+      <div class="form-group full">
+        <label>ที่อยู่ผู้จำหน่าย</label>
+        <textarea id="cv-vendor-addr" placeholder="ที่อยู่ผู้จำหน่าย"></textarea>
+      </div>
+      <div class="form-group">
+        <label>กำหนดส่งสินค้า</label>
+        <input type="date" id="cv-delivery" value="${pr.needDate || addDays(7)}">
+      </div>
+      <div class="form-group">
+        <label>เงื่อนไขการชำระเงิน</label>
+        <select id="cv-payment">
+          <option>ชำระเงินสด</option>
+          <option>30 วัน</option>
+          <option>60 วัน</option>
+          <option>เครดิต 90 วัน</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>สถานที่ส่งสินค้า</label>
+        <input type="text" id="cv-ship-to" placeholder="ที่อยู่จัดส่ง" value="${settings.address}">
+      </div>
+    </div>
+
+    <div class="section-title">รายการสินค้า (นำเข้าจาก PR)</div>
+    <div class="items-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>รายละเอียด</th>
+            <th style="width:90px; text-align:right">จำนวน</th>
+            <th style="width:80px; text-align:right">หน่วย</th>
+            <th style="width:110px; text-align:right">ราคา/หน่วย</th>
+            <th style="width:120px; text-align:right">รวม</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pr.items.map((item, i) => `
+            <tr>
+              <td style="color:var(--text3); font-size:13px">${i+1}</td>
+              <td>${item.desc}</td>
+              <td style="text-align:right; font-family:var(--mono)">${item.qty}</td>
+              <td style="text-align:right; color:var(--text2)">${item.unit}</td>
+              <td style="text-align:right; font-family:var(--mono)">${fmt(item.price)}</td>
+              <td style="text-align:right; font-family:var(--mono)">${fmt(item.total)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="totals-box mt-16">
+      <div class="total-row"><span>ยอดรวมก่อน VAT</span><span class="total-val">${fmt(pr.sub)}</span></div>
+      <div class="total-row"><span>VAT ${settings.vat}%</span><span class="total-val">${fmt(pr.vat)}</span></div>
+      <div class="total-row grand"><span>ยอดรวมทั้งสิ้น</span><span class="total-val">฿ ${fmt(pr.grand)}</span></div>
+    </div>
+
+    <div class="form-group mt-16">
+      <label>หมายเหตุ</label>
+      <textarea id="cv-note" placeholder="หมายเหตุ / เงื่อนไขพิเศษ">${pr.note || ''}</textarea>
+    </div>
+  `;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveConvertedPO() {
+  const vendor = document.getElementById('cv-vendor').value.trim();
+  if (!vendor) {
+    document.getElementById('cv-vendor').style.borderColor = 'var(--red)';
+    document.getElementById('cv-vendor').focus();
+    return;
+  }
+
+  const pr = docs.pr[convertPrIdx];
+  const poNo = document.getElementById('cv-no').value;
+
+  const po = {
+    no: poNo,
+    date: document.getElementById('cv-date').value,
+    vendor,
+    vendorAddr: document.getElementById('cv-vendor-addr').value,
+    delivery: document.getElementById('cv-delivery').value,
+    payment: document.getElementById('cv-payment').value,
+    shipTo: document.getElementById('cv-ship-to').value,
+    note: document.getElementById('cv-note').value,
+    items: pr.items,
+    sub: pr.sub,
+    vat: pr.vat,
+    grand: pr.grand,
+    status: 'อนุมัติแล้ว',
+    fromPrNo: pr.no
+  };
+
+  docs.po.push(po);
+
+  // อัปเดตสถานะ PR
+  docs.pr[convertPrIdx].status = 'สร้าง PO แล้ว';
+  docs.pr[convertPrIdx].linkedPoNo = poNo;
+
+  closeModal();
+  document.getElementById('modal-save').textContent = 'บันทึก';
+  document.getElementById('modal-save').onclick = saveDocument;
+  renderLists();
+  updateStats();
+  renderRecentDocs();
+
+  // ไปที่หน้า PO และ flash แถวใหม่
+  showPage('po');
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#po-list tr');
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      lastRow.style.transition = 'background 0.3s';
+      lastRow.style.background = 'var(--green-bg)';
+      setTimeout(() => { lastRow.style.background = ''; }, 1500);
+    }
+  }, 100);
+}
+
+// ========== SETTINGS ==========
+function saveSettings() {
+  settings.company = document.getElementById('s-company').value;
+  settings.address = document.getElementById('s-address').value;
+  settings.phone = document.getElementById('s-phone').value;
+  settings.email = document.getElementById('s-email').value;
+  settings.tax = document.getElementById('s-tax').value;
+  settings.vat = parseFloat(document.getElementById('s-vat').value) || 7;
+
+  const btn = document.querySelector('#page-settings .btn-primary');
+  btn.textContent = '✓ บันทึกแล้ว';
+  btn.style.background = 'var(--green)';
+  setTimeout(() => { btn.textContent = 'บันทึก'; btn.style.background = ''; }, 2000);
+}
+
+// ========== INIT ==========
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+renderLists();
+updateStats();
+</script>
+</body>
+</html>
